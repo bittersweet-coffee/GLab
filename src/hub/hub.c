@@ -111,9 +111,11 @@ fwd_frame (struct Interface *src_ifc,
   int a = 0;
   for (a = 0; a < num_ifc; a++) {
    	if(&gifc[a].ifc_num != &src_ifc->ifc_num) {
-            print("Forwarding Frame from %u to %u \n", (unsigned)&src_ifc->ifc_num, (unsigned)&gifc[a]->ifc_num);
-    		forward_to (&gifc[a], frame, frame_size);
-   	}
+        print("Frame from %u to %u forwarded\n", (unsigned)&src_ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+        forward_to (&gifc[a], frame, frame_size);
+   	} else {
+        print("Frame from %u to %u dropped\n", (unsigned)&src_ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+    }
   }
 }
 
