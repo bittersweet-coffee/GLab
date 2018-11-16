@@ -108,11 +108,12 @@ fwd_frame (struct Interface *src_ifc,
 	   size_t frame_size)
 {
   /* do work here */
-  int a = 0; 
+  int a = 0;
   for (a = 0; a < num_ifc; a++) {
    	if(&gifc[a].ifc_num != &src_ifc->ifc_num) {
+            print("Forwarding Frame from " PRIu16 " to " PRIu16 "\n", &src_ifc->ifc_num, &gifc[a]->ifc_num);
     		forward_to (&gifc[a], frame, frame_size);
-   	}	
+   	}
   }
 }
 
