@@ -42,6 +42,7 @@ struct EthernetHeader
 _Pragma("pack(pop)")
 
 
+
 /**
  * Per-interface context.
  */
@@ -59,6 +60,13 @@ struct Interface
 
 };
 
+struct Mapping {
+    struct MacAddress mac;
+    struct Interface target_ifc_num;
+    time_t timeRemembered;
+}
+
+static struct Mapping switch_table[100];
 
 /**
  * Number of available contexts.
@@ -124,7 +132,26 @@ parse_frame (struct Interface *ifc,
 	  frame,
 	  sizeof (eh));
   /* do work here! */
+/* TODO: save to table: sender MAC and sender Port */
+    struct Mapping mapping;
+    mapping.mac = eh.src;
+    mapping.target_ifc_num = ifc->ifc_num;
+    mapping.timeRemembered = time(time_t *);
+    /* TODO: save */
+/* TODO: get port from table for destination MAC */
+/* TODO: Forward frame to all except sender MAC */
+    int a = 0;
+    for (a = 0; a < num_ifc; a++) {
+        if(&gifc[a].ifc_num != &src_ifc->ifc_num) {
+            print("Frame from %u to %u forwarded\n", (unsigned)&src_ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+            forward_to (&gifc[a], frame, frame_size);
+        } else {
+            print("Frame from %u to %u dropped\n", (unsigned)&src_ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+        }
+    }
 }
+
+
 
 
 /**
