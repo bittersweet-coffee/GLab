@@ -23,6 +23,12 @@
  */
 #include "glab.h"
 #include "print.c"
+#include "time.h"
+
+/**
+ * declarations
+ */
+static int maccmp (const struct MacAddress *mac1, const struct MacAddress *mac2);
 
 
 /**
@@ -62,10 +68,13 @@ struct Interface
 
 struct Mapping {
     struct MacAddress mac;
-    uint16_t target_ifc_num;
+    uint16_t ifc_num;
     time_t timeRemembered;
 };
 
+static unsigned int mappings_size = 10;
+static struct Mapping * mappings;
+static unsigned int mappings_next_empty = 0;
 
 
 /**
@@ -120,24 +129,77 @@ parse_frame (struct Interface *ifc,
 	     const void *frame,
 	     size_t frame_size)
 {
-  struct EthernetHeader eh;
+    struct EthernetHeader eh;
 
-  if (frame_size < sizeof (eh))
-  {
-    fprintf (stderr,
-	     "Malformed frame\n");
-    return;
-  }
-  memcpy (&eh,
-	  frame,
-	  sizeof (eh));
-  /* do work here! */
-/* TODO: save to table: sender MAC and sender Port */
-    struct Mapping mapping;
-    mapping.mac = eh.src;
-    mapping.target_ifc_num = ifc->ifc_num;
-    //mapping.timeRemembered = time(time_t *);
-    /* TODO: save */
+    if (frame_size < sizeof (eh))
+    {
+        fprintf (stderr,
+            "Malformed frame\n");
+        return;
+    }
+    memcpy (&eh, frame, sizeof (eh));
+    /* do work here! */
+
+    // Step 1: Update info about sender Interface Number and MAC.
+
+    time_t current = time(NULL);
+    time_t oldest = time(NULL);
+    int oldestIndex = 0;
+    int isNew=1;
+    for(int i = 0; i < mappings_size; i++){
+        // Search for last entry for same MAC.
+        if(maccmp(&(mappings[i].mac),&(eh.src))){
+            // Update values for this MAC.
+            mappings[i].ifc_num = ifc->ifc_num;
+            mappings[i].timeRemembered = current;
+            // If found, is obviously no new MAC.
+            isNew = 0;
+            break;
+        }
+
+        // We have not found MAC entry and check if current array item is oldest.
+        if(difftime(mappings[i].timeRemembered,oldest) < 0){
+            oldest = mappings[i].timeRemembered;
+            oldestIndex = i;
+        }
+    }
+
+    // If is new MAC we need to save it.
+    if(isNew == 1){
+        int index;
+        // If has free slots, save there.
+        if(mappings_next_empty < mappings_size){
+            index = mappings_next_empty;
+            mappings_next_empty++;
+        }
+        // Else override the oldest entry.
+        else {
+            index = oldestIndex;
+        }
+
+        mappings[index].timeRemembered = current;
+        mappings[index].ifc_num = ifc->ifc_num;
+        mappings[index].mac = eh.src;
+    }
+
+    // Step 2: Lookup Receiver Interface Number. If not found, broadcast.
+
+    uint16_t destination_if;
+    int found_dest_mac = 0;
+    for(int i = 0; i < mappings_size; i++){
+        if(maccmp(mappings[i], eh.dst) == 0){
+            destination_if = mappings[i].ifc_num;
+            found_dest_mac = 1;
+            break;
+        }
+    }
+    if(found_dest_mac == 1){
+        // TODO
+    } else {
+        // TODO
+    }
+
+
     /* TODO: get port from table for destination MAC */
     /* TODO: Forward frame to all except sender MAC */
     int a = 0;
@@ -151,7 +213,20 @@ parse_frame (struct Interface *ifc,
     }
 }
 
+static void memorize(struct Mapping mappingToSave){
+    for(int m = 0; m < mappings_size; m++){
+        if(&mappings[m].target_ifc_num <= 0){
+            mappings[m] = mappingToSave;
+            break;
+        }
+    }
+}
 
+static uint16_t rememberPortFor(MacAddress macAddress){
+    for(int m = 0; m < mappings_size; m++){
+        if(&mappings[m].)
+    }
+}
 
 
 /**
@@ -232,4 +307,14 @@ main (int argc,
 
   loop ();
   return 0;
+}
+
+/**
+ * compare two mac addresses
+ */
+static int
+maccmp (const struct MacAddress *mac1,
+        const struct MacAddress *mac2)
+{
+    return memcmp (mac1, mac2, sizeof (struct MacAddress));
 }
