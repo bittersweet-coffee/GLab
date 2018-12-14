@@ -130,6 +130,15 @@ static void parse_frame(
 
     /* do work here! */
 
+    print("Sender MAC [%02X:%02X:%02X:%02X:%02X:%02X] Interface [%u]\nFrame from %u to %u forwarded\n",
+    eh.src.mac[0],
+    eh.src.mac[1],
+    eh.src.mac[2],
+    eh.src.mac[3],
+    eh.src.mac[4],
+    eh.src.mac[5],
+    (unsigned)&ifc->ifc_num);
+
     // Step 1: Update info about sender Interface Number and MAC.
 
     time_t current = time(NULL);
@@ -139,7 +148,7 @@ static void parse_frame(
 
     for (int i = 0; i < mappings_size; i++)
     {
-
+        if(&(mappings[i]) == NULL || &(mappings[i]).mac == NULL)
         // Search for last entry for same MAC.
         if (maccmp(&(mappings[i].mac), &(eh.src)))
         {
@@ -190,6 +199,7 @@ static void parse_frame(
 
     for (int i = 0; i < mappings_size; i++)
     {
+
         if (maccmp(&(mappings[i].mac), &(eh.dst) == 0))
         {
             destination_if = mappings[i].ifc_num;
@@ -222,17 +232,20 @@ static void parse_frame(
     }
 }
 
-/**
+static char * getMacString(){
+
+}
+
+    /**
  * Process frame received from @a interface.
  *
  * @param interface number of the interface on which we received @a frame
  * @param frame the frame
  * @param frame_size number of bytes in @a frame
  */
-static void
-handle_frame(uint16_t interface,
-             const void *frame,
-             size_t frame_size)
+    static void handle_frame(uint16_t interface,
+                             const void *frame,
+                             size_t frame_size)
 {
     if (interface > num_ifc)
         abort();
@@ -300,9 +313,7 @@ int main(int argc,
 /**
  * compare two mac addresses
  */
-static int
-maccmp(const struct MacAddress *mac1,
-       const struct MacAddress *mac2)
+static int maccmp(const struct MacAddress * mac1, const struct MacAddress *mac2)
 {
     return memcmp(mac1, mac2, sizeof(struct MacAddress));
 }
