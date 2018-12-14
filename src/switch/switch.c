@@ -139,6 +139,23 @@ static void parse_frame(
     eh.src.mac[5],
     (unsigned)&ifc->ifc_num);
 
+    if(&(eh).dst == NULL){
+        print("SUPERSWITCH: Destination MAC is NULL. Is Broadcast.\n");
+        int a = 0;
+        for (a = 0; a < num_ifc; a++)
+        {
+            if (&gifc[a].ifc_num != &ifc->ifc_num)
+            {
+                print("Frame from %u to %u forwarded\n", (unsigned)&ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+                forward_to(&gifc[a], frame, frame_size);
+            }
+            else
+            {
+                print("Frame from %u to %u dropped\n", (unsigned)&ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+            }
+        }
+    }
+
     print("SUPERSWITCH: Destination MAC [%02X:%02X:%02X:%02X:%02X:%02X]\n",
     eh.dst.mac[0],
     eh.dst.mac[1],
@@ -146,8 +163,6 @@ static void parse_frame(
     eh.dst.mac[3],
     eh.dst.mac[4],
     eh.dst.mac[5]);
-
-    return
 
     // Step 1: Update info about sender Interface Number and MAC.
 
