@@ -130,7 +130,7 @@ static void parse_frame(
 
     /* do work here! */
 
-    print("Sender MAC [%02X:%02X:%02X:%02X:%02X:%02X] Interface [%u]\nFrame from %u to %u forwarded\n",
+    print("SUPERSWITCH: Sender MAC [%02X:%02X:%02X:%02X:%02X:%02X] Interface [%u]\nFrame from %u to %u forwarded\n",
     eh.src.mac[0],
     eh.src.mac[1],
     eh.src.mac[2],
@@ -138,6 +138,14 @@ static void parse_frame(
     eh.src.mac[4],
     eh.src.mac[5],
     (unsigned)&ifc->ifc_num);
+
+    print("SUPERSWITCH: Destination MAC [%02X:%02X:%02X:%02X:%02X:%02X]",
+    eh.dst.mac[0],
+    eh.dst.mac[1],
+    eh.dst.mac[2],
+    eh.dst.mac[3],
+    eh.dst.mac[4],
+    eh.dst.mac[5]);
 
     // Step 1: Update info about sender Interface Number and MAC.
 
