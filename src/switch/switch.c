@@ -130,6 +130,7 @@ static void parse_frame(
     memcpy(&eh, frame, sizeof(eh));
 
     /* do work here! */
+    /*
     print("SUPERSWITCH: SRC: ");
     print("Ifc: [%u] ", (unsigned)&ifc->ifc_num);
     print("MAC: ");
@@ -148,7 +149,7 @@ static void parse_frame(
         print("IS NULL");
     }
     print("\n");
-
+*/
 
     if(&(eh).dst == NULL){
         print("SUPERSWITCH: Destination MAC is NULL. Is Broadcast.\n");
@@ -358,5 +359,5 @@ static int maccmp(const struct MacAddress * mac1, const struct MacAddress *mac2)
  * Print MAC address.
  */
 static void printMac(const struct MacAddress * mac){
-    print("[%02X:%02X:%02X:%02X:%02X:%02X]",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    //print("[%02X:%02X:%02X:%02X:%02X:%02X]",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
 }
