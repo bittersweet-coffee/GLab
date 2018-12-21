@@ -129,16 +129,26 @@ static void parse_frame(
     memcpy(&eh, frame, sizeof(eh));
 
     /* do work here! */
+    print("SUPERSWITCH: SRC: ");
+    print("Ifc: [%u] ", (unsigned)&ifc->ifc_num);
+    print("MAC: ");
+    if(&(eh).src != NULL && eh.src.mac != NULL){
+        printMac(eh.src.mac);
+    } else {
+        print("IS NULL");
+    }
+    print("\n");
 
-    print("SUPERSWITCH: Sender MAC [%02X:%02X:%02X:%02X:%02X:%02X] Interface [%u]\n",
-    eh.src.mac[0],
-    eh.src.mac[1],
-    eh.src.mac[2],
-    eh.src.mac[3],
-    eh.src.mac[4],
-    eh.src.mac[5],
-    (unsigned)&ifc->ifc_num);
+    print("SUPERSWITCH: DST: ");
+    print("MAC: ");
+    if(&(eh).dst != NULL && eh.dst.mac != NULL){
+        printMac(eh.dst.mac);
+    } else {
+        print("IS NULL");
+    }
+    print("\n");
 
+/*
     if(&(eh).dst == NULL){
         print("SUPERSWITCH: Destination MAC is NULL. Is Broadcast.\n");
         int a = 0;
@@ -255,6 +265,8 @@ static void parse_frame(
             }
         }
     }
+
+    */
 }
 
 static char * getMacString(){
@@ -341,4 +353,11 @@ int main(int argc,
 static int maccmp(const struct MacAddress * mac1, const struct MacAddress *mac2)
 {
     return memcmp(mac1, mac2, sizeof(struct MacAddress));
+}
+
+/**
+ * Print MAC address.
+ */
+static void printMac(const struct MacAddress * mac){
+    print("[%02X:%02X:%02X:%02X:%02X:%02X]",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
 }
