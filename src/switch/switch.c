@@ -149,7 +149,7 @@ static void parse_frame(
     }
     print("\n");
 
-/*
+
     if(&(eh).dst == NULL){
         print("SUPERSWITCH: Destination MAC is NULL. Is Broadcast.\n");
         int a = 0;
@@ -266,8 +266,6 @@ static void parse_frame(
             }
         }
     }
-
-    */
 }
 
 static char * getMacString(){
