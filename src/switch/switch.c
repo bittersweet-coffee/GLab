@@ -29,6 +29,7 @@
  * declarations
  */
 static int maccmp(const struct MacAddress *mac1, const struct MacAddress *mac2);
+static void printMac(const struct MacAddress *mac);
 
 /**
  * gcc 4.x-ism to pack structures (to be used before structs);
