@@ -24,11 +24,12 @@
 #include "glab.h"
 #include "print.c"
 #include "time.h"
+#include "loop.c"
 
 /**
  * declarations
  */
-static int maccmp(const struct MacAddress *mac1, const struct MacAddress *mac2);
+static bool maccmp(const struct MacAddress *mac1, const struct MacAddress *mac2);
 static void printMac(const struct MacAddress *mac);
 
 /**
@@ -38,7 +39,7 @@ static void printMac(const struct MacAddress *mac);
  */
 _Pragma("pack(push)") _Pragma("pack(1)")
 
-    struct EthernetHeader
+struct EthernetHeader
 {
     struct MacAddress dst;
     struct MacAddress src;
@@ -47,10 +48,10 @@ _Pragma("pack(push)") _Pragma("pack(1)")
 
 _Pragma("pack(pop)")
 
-    /**
+/**
  * Per-interface context.
  */
-    struct Interface
+struct Interface
 {
     /**
    * MAC of interface.
@@ -63,17 +64,6 @@ _Pragma("pack(pop)")
     uint16_t ifc_num;
 };
 
-struct Mapping
-{
-    struct MacAddress mac;
-    uint16_t ifc_num;
-    time_t timeRemembered;
-};
-
-static unsigned int mappings_size = 10;
-static struct Mapping *mappings;
-static unsigned int mappings_next_empty = 0;
-
 /**
  * Number of available contexts.
  */
@@ -83,6 +73,16 @@ static unsigned int num_ifc;
  * All the contexts.
  */
 static struct Interface *gifc;
+
+struct MacToIfc
+{
+    struct MacAddress mac;
+    uint16_t ifc_num;
+    time_t timeStamp;
+};
+
+static unsigned int macToIfc_size = 10;
+static struct MacToIfc *macToIfc = malloc(mayToIfc_size * sizeof(struct MacToIfc));
 
 /**
  * Forward @a frame to interface @a dst.
@@ -113,10 +113,7 @@ static void forward_to(
  * @param frame raw frame data
  * @param frame_size number of bytes in @a frame
  */
-static void parse_frame(
-    struct Interface *ifc,
-    const void *frame,
-    size_t frame_size)
+static void parse_frame(struct Interface *ifc, const void *frame, size_t frame_size)
 {
     struct EthernetHeader eh;
 
@@ -130,165 +127,84 @@ static void parse_frame(
     memcpy(&eh, frame, sizeof(eh));
 
     /* do work here! */
-    /*
-    print("SUPERSWITCH: SRC: ");
-    print("Ifc: [%u] ", (unsigned)&ifc->ifc_num);
-    print("MAC: ");
-    if(&(eh).src != NULL && eh.src.mac != NULL){
-        printMac(eh.src.mac);
-    } else {
-        print("IS NULL");
-    }
-    print("\n");
 
-    print("SUPERSWITCH: DST: ");
-    print("MAC: ");
-    if(&(eh).dst != NULL && eh.dst.mac != NULL){
-        printMac(eh.dst.mac);
-    } else {
-        print("IS NULL");
-    }
-    print("\n");
-*/
+    int invalidIndex = -1;
+    int oldestIndex = invalidIndex;
+    int srcIndex = invalidIndex;
+    int dstEntryIndex = invalidIndex;
+    time_t now = time(NULL);
 
-    if(&(eh).dst == NULL){
-        print("SUPERSWITCH: Destination MAC is NULL. Is Broadcast.\n");
-        int a = 0;
-        for (a = 0; a < num_ifc; a++)
-        {
-            if (&gifc[a].ifc_num != &ifc->ifc_num)
-            {
-                print("Frame from %u to %u forwarded\n", (unsigned)&ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
-                forward_to(&gifc[a], frame, frame_size);
+    // STEP 1: FIND ...
+    //         WHERE TO SAVE SOURCE MAC AND INTERFACE INFO
+    //         WHERE DESTINATION MAC AND INTERFACE IS SAVED
+    for (int i = 0; i < macToIfc_size; i++){
+        if(srcIndex == invalidIndex){ // Prevent longer comparison if src found.
+            // Is this the entry for the source?
+            if(maccmp(&(macToIfc[i]).mac, eh.src.mac)){
+                srcIndex = i;
             }
-            else
-            {
-                print("Frame from %u to %u dropped\n", (unsigned)&ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
+            // Is this an entry that is older than those before?
+            else if (difftime(macToIfc[i].timeStamp, macToIfc[oldestIndex].timeStamp) < 0){
+                oldestIndex = i;
             }
         }
-    }
 
-    print("SUPERSWITCH: Destination MAC [%02X:%02X:%02X:%02X:%02X:%02X]\n",
-    eh.dst.mac[0],
-    eh.dst.mac[1],
-    eh.dst.mac[2],
-    eh.dst.mac[3],
-    eh.dst.mac[4],
-    eh.dst.mac[5]);
-
-    // Step 1: Update info about sender Interface Number and MAC.
-
-    time_t current = time(NULL);
-    time_t oldest = time(NULL);
-    int oldestIndex = 0;
-    int isNew = 1;
-
-    for (int i = 0; i < mappings_size; i++)
-    {
-        if(&(mappings[i]) == NULL || &(mappings[i]).mac == NULL)
-        // Search for last entry for same MAC.
-        if (maccmp(&(mappings[i].mac), &(eh.src)))
-        {
-            // Update values for this MAC.
-            mappings[i].ifc_num = ifc->ifc_num;
-            mappings[i].timeRemembered = current;
-            // If found, is obviously no new MAC.
-            isNew = 0;
-            break;
+        if(dstIndex == invalidIndex){ // Prevent longer comparison if dst found.
+            // Is this the destination entry?
+            if(maccmp(&(macToIfc[i]).mac, eh.dst.mac)){
+                dstIndex = i;
+            }
         }
 
-        // We have not found MAC entry and check if current array item is oldest.
-        if (difftime(mappings[i].timeRemembered, oldest) < 0)
-        {
-            oldest = mappings[i].timeRemembered;
-            oldestIndex = i;
-        }
-    }
-
-    // If is new MAC we need to save it.
-    if (isNew == 1)
-    {
-
-        int index;
-
-        // If has free slots, save there.
-        if (mappings_next_empty < mappings_size)
-        {
-            index = mappings_next_empty;
-            mappings_next_empty++;
-        }
-        // Else override the oldest entry.
-        else
-        {
-            index = oldestIndex;
-        }
-
-        mappings[index].timeRemembered = current;
-        mappings[index].ifc_num = ifc->ifc_num;
-        mappings[index].mac = eh.src;
-    }
-
-    // Step 2: Lookup Receiver Interface Number. If not found, broadcast.
-
-    uint16_t destination_if;
-
-    int found_dest_mac = 0;
-
-    for (int i = 0; i < mappings_size; i++)
-    {
-
-        if (maccmp(&(mappings[i].mac), &(eh.dst) == 0))
-        {
-            destination_if = mappings[i].ifc_num;
-            found_dest_mac = 1;
+        // No need to loop further if we found source and destination indices.
+        // Note: If oldestIndex != invalidIndex, it is still possible to find an older one.
+        if(srcIndex != invalidIndex && dstIndex != invalidIndex){
             break;
         }
     }
 
-    // if we have fount the Interface for the MAC, send there
-    if (found_dest_mac == 1)
-    {
-        forward_to(&destination_if, frame, frame_size);
+    // STEP 2: SAVE MAC AND INTERFACE FOR SOURCE BY ...
+    //         OVERRIDING PREVIOUS ENTRY, IF ENTRY FOR SOURCE FOUND.
+    //         OVERRIDING OLDEST ENTRY, IF ENTRY FOR SOURCE NOT FOUND.
+    if(srcIndex != invalidIndex){
+        macToIfc[srcIndex].ifc_num = ifc->ifc_num;
+        macToIfc[srcIndex].timeStamp = now;
+    } else {
+        macToIfc[oldestIndex].ifc_num = ifc->ifc_num;
+        macToIfc[oldestIndex].timeStamp = now;
     }
-    // else, send to all except sender
-    else
-    {
+
+    // STEP 3: EITHER
+    //         FORWARD TO DESTINATION, IF FOUND.
+    //         FORWARD TO ALL EXCEPT SELF, IF DESTINATION NOT FOUND. (i.e. broadcast)
+    if(dstIndex != invalidIndex){
+        forward_to(&macToIfc[dstIndex], frame, frame_size);
+    } else {
         int a = 0;
-        for (a = 0; a < num_ifc; a++)
-        {
-            if (&gifc[a].ifc_num != &ifc->ifc_num)
-            {
+        for (a = 0; a < num_ifc; a++){
+            if (&gifc[a].ifc_num != &ifc->ifc_num){
                 print("Frame from %u to %u forwarded\n", (unsigned)&ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
                 forward_to(&gifc[a], frame, frame_size);
-            }
-            else
-            {
+            } else {
                 print("Frame from %u to %u dropped\n", (unsigned)&ifc->ifc_num, (unsigned)&gifc[a].ifc_num);
             }
         }
     }
 }
 
-static char * getMacString(){
-
-}
-
-    /**
+/**
  * Process frame received from @a interface.
  *
  * @param interface number of the interface on which we received @a frame
  * @param frame the frame
  * @param frame_size number of bytes in @a frame
  */
-    static void handle_frame(uint16_t interface,
-                             const void *frame,
-                             size_t frame_size)
+static void handle_frame(uint16_t interface, const void *frame, size_t frame_size)
 {
-    if (interface > num_ifc)
+    if (interface > num_ifc){
         abort();
-    parse_frame(&gifc[interface - 1],
-                frame,
-                frame_size);
+    }
+    parse_frame(&gifc[interface - 1], frame, frame_size);
 }
 
 /**
@@ -297,13 +213,10 @@ static char * getMacString(){
  * @param cmd text the user entered
  * @param cmd_len length of @a cmd
  */
-static void
-handle_control(char *cmd,
-               size_t cmd_len)
+static void handle_control(char *cmd, size_t cmd_len)
 {
     cmd[cmd_len - 1] = '\0';
-    print("Received command `%s' (ignored)\n",
-          cmd);
+    print("Received command `%s' (ignored)\n", cmd);
 }
 
 /**
@@ -312,16 +225,15 @@ handle_control(char *cmd,
  * @param ifc_num number of the interface with @a mac
  * @param mac the MAC address at @a ifc_num
  */
-static void
-handle_mac(uint16_t ifc_num,
-           const struct MacAddress *mac)
+static void handle_mac(uint16_t ifc_num, const struct MacAddress *mac)
 {
-    if (ifc_num > num_ifc)
+    if (ifc_num > num_ifc){
         abort();
+    }
     gifc[ifc_num - 1].mac = *mac;
 }
 
-#include "loop.c"
+
 
 /**
  * Launches the switch.
@@ -330,34 +242,31 @@ handle_mac(uint16_t ifc_num,
  * @param argv binary name, followed by list of interfaces to switch between
  * @return not really
  */
-int main(int argc,
-         char **argv)
+int main(int argc, char **argv)
 {
     struct Interface ifc[argc - 1];
-
-    memset(ifc,
-           0,
-           sizeof(ifc));
+    memset(ifc, 0, sizeof(ifc));
     num_ifc = argc - 1;
     gifc = ifc;
-    for (unsigned int i = 1; i < argc; i++)
+
+    for (unsigned int i = 1; i < argc; i++){
         ifc[i - 1].ifc_num = i;
+    }
 
     loop();
     return 0;
 }
 
 /**
- * compare two mac addresses
+ * Compare two MACs.
  */
-static int maccmp(const struct MacAddress * mac1, const struct MacAddress *mac2)
-{
-    return memcmp(mac1, mac2, sizeof(struct MacAddress));
+static bool maccmp(const struct MacAddress *mac1, const struct MacAddress *mac2){
+    return memcmp(mac1, mac2, sizeof(struct MacAddress)) == 0;
 }
 
 /**
  * Print MAC address.
  */
-static void printMac(const struct MacAddress * mac){
+static void printMac(const struct MacAddress *mac){
     //print("[%02X:%02X:%02X:%02X:%02X:%02X]",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
 }
