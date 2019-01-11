@@ -25,6 +25,7 @@
 #include "print.c"
 #include "time.h"
 #include "loop.c"
+#define macToIfc_size 10
 
 /**
  * declarations
@@ -81,7 +82,6 @@ struct MacToIfc
     time_t timeStamp;
 };
 
-#define macToIfc_size 10;
 static struct MacToIfc *macToIfc = malloc(macToIfc_size * sizeof(struct MacToIfc));
 
 /**
