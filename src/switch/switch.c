@@ -243,10 +243,12 @@ static void handle_mac(uint16_t ifc_num, const struct MacAddress *mac)
  */
 int main(int argc, char **argv)
 {
+    /*
     struct MacToIfc Table[10];
     memset(Table, 0, sizeof(Table));
     macToIfc = Table;
-
+*/
+    macToIfc = (MacToIfc *)malloc(10 * sizeof(MacToIfc));
 
     struct Interface ifc[argc - 1];
     memset(ifc, 0, sizeof(ifc));
