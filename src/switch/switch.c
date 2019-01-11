@@ -199,7 +199,7 @@ static void parse_frame(struct Interface *ifc, const void *frame, size_t frame_s
  * @param frame the frame
  * @param frame_size number of bytes in @a frame
  */
-static void handle_frame(uint16_t interface, const void *frame, size_t frame_size)
+/*static*/ void handle_frame(uint16_t interface, const void *frame, size_t frame_size)
 {
     if (interface > num_ifc){
         abort();
@@ -213,7 +213,7 @@ static void handle_frame(uint16_t interface, const void *frame, size_t frame_siz
  * @param cmd text the user entered
  * @param cmd_len length of @a cmd
  */
-static void handle_control(char *cmd, size_t cmd_len)
+/*static*/ void handle_control(char *cmd, size_t cmd_len)
 {
     cmd[cmd_len - 1] = '\0';
     print("Received command `%s' (ignored)\n", cmd);
@@ -225,7 +225,7 @@ static void handle_control(char *cmd, size_t cmd_len)
  * @param ifc_num number of the interface with @a mac
  * @param mac the MAC address at @a ifc_num
  */
-static void handle_mac(uint16_t ifc_num, const struct MacAddress *mac)
+/*static*/ void handle_mac(uint16_t ifc_num, const struct MacAddress *mac)
 {
     if (ifc_num > num_ifc){
         abort();
