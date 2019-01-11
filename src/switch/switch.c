@@ -24,7 +24,6 @@
 #include "glab.h"
 #include "print.c"
 #include "time.h"
-#include "loop.c"
 #define macToIfc_size 10
 
 /**
@@ -233,7 +232,7 @@ static void handle_mac(uint16_t ifc_num, const struct MacAddress *mac)
     gifc[ifc_num - 1].mac = *mac;
 }
 
-
+#include "loop.c"
 
 /**
  * Launches the switch.
