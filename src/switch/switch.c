@@ -82,7 +82,7 @@ struct MacToIfc
 };
 
 static const unsigned int macToIfc_size = 10;
-static struct MacToIfc *macToIfc = malloc(macToIfc_size * sizeof(struct MacToIfc));
+static struct MacToIfc *macToIfc = malloc(10 * sizeof(struct MacToIfc));
 
 /**
  * Forward @a frame to interface @a dst.
