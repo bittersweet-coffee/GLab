@@ -82,7 +82,7 @@ struct MacToIfc
 };
 
 static unsigned int macToIfc_size = 10;
-static struct MacToIfc *macToIfc = malloc(mayToIfc_size * sizeof(struct MacToIfc));
+static struct MacToIfc *macToIfc = malloc(macToIfc_size * sizeof(struct MacToIfc));
 
 /**
  * Forward @a frame to interface @a dst.
@@ -131,7 +131,7 @@ static void parse_frame(struct Interface *ifc, const void *frame, size_t frame_s
     int invalidIndex = -1;
     int oldestIndex = invalidIndex;
     int srcIndex = invalidIndex;
-    int dstEntryIndex = invalidIndex;
+    int dstIndex = invalidIndex;
     time_t now = time(NULL);
 
     // STEP 1: FIND ...
