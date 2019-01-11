@@ -82,7 +82,7 @@ struct MacToIfc
     time_t timeStamp;
 };
 
-static struct MacToIfc *macToIfc = malloc(10 * sizeof(struct MacToIfc));
+static struct MacToIfc *macToIfc; // = malloc(10 * sizeof(struct MacToIfc));
 
 /**
  * Forward @a frame to interface @a dst.
