@@ -140,7 +140,7 @@ static void parse_frame(struct Interface *ifc, const void *frame, size_t frame_s
     for (int i = 0; i < macToIfc_size; i++){
         if(srcIndex == invalidIndex){ // Prevent longer comparison if src found.
             // Is this the entry for the source?
-            if(maccmp(&(macToIfc[i]).mac, eh.src.mac)){
+            if(maccmp(&(macToIfc[i].mac), eh.src.mac)){
                 srcIndex = i;
             }
             // Is this an entry that is older than those before?
@@ -244,6 +244,11 @@ static void parse_frame(struct Interface *ifc, const void *frame, size_t frame_s
  */
 int main(int argc, char **argv)
 {
+    struct MacToIfc Table[10];
+    memset(Table, 0, sizeof(Table));
+    macToIfc = Table;
+
+
     struct Interface ifc[argc - 1];
     memset(ifc, 0, sizeof(ifc));
     num_ifc = argc - 1;
