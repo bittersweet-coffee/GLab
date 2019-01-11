@@ -248,7 +248,7 @@ int main(int argc, char **argv)
     memset(Table, 0, sizeof(Table));
     macToIfc = Table;
 */
-    macToIfc = (MacToIfc *)malloc(10 * sizeof(MacToIfc));
+    macToIfc = malloc(10 * sizeof(MacToIfc));
 
     struct Interface ifc[argc - 1];
     memset(ifc, 0, sizeof(ifc));
