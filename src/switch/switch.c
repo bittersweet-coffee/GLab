@@ -81,8 +81,8 @@ struct MacToIfc
     time_t timeStamp;
 };
 
-static const unsigned int macToIfc_size = 10;
-static struct MacToIfc *macToIfc = malloc(10 * sizeof(struct MacToIfc));
+#define unsigned int macToIfc_size = 10;
+static struct MacToIfc *macToIfc = malloc(macToIfc_size * sizeof(struct MacToIfc));
 
 /**
  * Forward @a frame to interface @a dst.
